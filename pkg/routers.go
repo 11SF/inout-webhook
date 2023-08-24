@@ -10,12 +10,13 @@ import (
 )
 
 type Routers struct {
-	config  *configs.Config
-	lineBot *linebot.Client
+	config    *configs.Config
+	lineBot   *linebot.Client
+	httoInOut *httpinout.HTTPInOut
 }
 
-func NewRouters(config *configs.Config, lineBot *linebot.Client) *Routers {
-	return &Routers{config, lineBot}
+func NewRouters(config *configs.Config, lineBot *linebot.Client, httoInOut *httpinout.HTTPInOut) *Routers {
+	return &Routers{config, lineBot, httoInOut}
 }
 
 func (router *Routers) InitRouters() *gin.Engine {
@@ -27,15 +28,7 @@ func (router *Routers) InitRouters() *gin.Engine {
 	contextPath := r.Group("/inout-webhook")
 	v1 := contextPath.Group("/v1")
 
-	httoInOut := httpinout.NewHTTP(&httpinout.HTTPConfig{
-		Addr:       router.config.MgmtService.Addr,
-		ApiVersion: router.config.MgmtService.ApiVersion,
-		Endpoints: &httpinout.Endpoints{
-			AddExpenseEndpoint: router.config.MgmtService.AddExpenseEndpoint,
-			AddIncomeEndpoint:  router.config.MgmtService.AddIncomeEndpoint,
-		},
-	})
-	lineService := coreline.NewService(httoInOut, router.config)
+	lineService := coreline.NewService(router.httoInOut, router.config)
 	lineHandler := linehandleer.NewLineHandler(router.lineBot, lineService.EventMessage)
 	v1.POST("/line", lineHandler.LineHandler)
 
