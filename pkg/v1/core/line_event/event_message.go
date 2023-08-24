@@ -1,6 +1,7 @@
 package coreline
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -14,72 +15,69 @@ type EventMessageFunc func(event *linebot.Event) error
 func (s *service) EventMessage(event *linebot.Event) error {
 
 	slog.Info("start event message")
-	if event.Type == linebot.EventTypeMessage {
-		textMessage, ok := event.Message.(*linebot.TextMessage)
-		if !ok {
-			return nil
-		}
-		slog.Info(event.Source.UserID)
-		slog.Info(textMessage.Text)
+	textMessage, ok := event.Message.(*linebot.TextMessage)
+	if !ok {
+		return nil
+	}
+	slog.Info(textMessage.Text)
 
-		plaintText := textMessage.Text
-		plaintText = strings.TrimSpace(plaintText)
+	plaintText := textMessage.Text
+	plaintText = strings.TrimSpace(plaintText)
 
-		if len(plaintText) <= 0 {
-			return nil
-		}
+	var transactionFlag string
+	trans := &datamodel.Transaction{}
+	trans.UserUUID = event.Source.UserID
 
+	transactionWithMessage, _ := regexp.MatchString(`([+-])(\d+(\.\d{2})?)฿(.+)`, plaintText)
+	if transactionWithMessage {
+		transactionFlag = string(plaintText[0])
 		data := strings.Split(plaintText, "฿")
-		if len(data) != 2 {
-			slog.Info("invalid in/ex format")
+		amountStr := data[0][1:]
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil {
+			slog.Info("fail to parse float")
 			return nil
 		}
-		transactionFlag := data[0][0]
-		if string(transactionFlag) == string(s.config.AppConstants.ExpenseFlag) {
-			slog.Info("start case add expense")
-			amountStr := data[0][1:]
-			amount, err := strconv.ParseFloat(amountStr, 64)
-			if err != nil {
-				slog.Info("fail to parse float")
-				return nil
-			}
-
-			trans := &datamodel.Transaction{
-				Amount:   amount,
-				Message:  data[1],
-				UserUUID: event.Source.UserID,
-			}
-			err = s.httpInOut.AddExpenseRequest(trans)
-			if err != nil {
-				slog.Info("fail to add expense", "with", err.Error())
-				return nil
-			}
-			slog.Info("case add expense success")
+		trans.Amount = amount
+		trans.Message = strings.TrimSpace(data[1])
+	}
+	transactionWithOutMessage, _ := regexp.MatchString(`([+-])(\d+(\.\d{2})?)฿`, plaintText)
+	if transactionWithOutMessage {
+		transactionFlag = string(plaintText[0])
+		amountStr := strings.TrimRight(plaintText[1:], "฿")
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil {
+			slog.Info("fail to parse float")
 			return nil
 		}
-		if string(transactionFlag) == string(s.config.AppConstants.IncomeFlag) {
-			slog.Info("start case add income")
-			amountStr := data[0][1:]
-			amount, err := strconv.ParseFloat(amountStr, 64)
-			if err != nil {
-				slog.Info("fail to parse float")
-				return nil
-			}
-
-			trans := &datamodel.Transaction{
-				Amount:   amount,
-				Message:  data[1],
-				UserUUID: event.Source.UserID,
-			}
-			err = s.httpInOut.AddIncomeRequest(trans)
-			if err != nil {
-				slog.Info("fail to add income", "with", err.Error())
-				return nil
-			}
-			return nil
-		}
+		trans.Amount = amount
 	}
 
-	slog.Info("case add income success")
+	if transactionFlag == string(s.config.AppConstants.ExpenseFlag) {
+
+		slog.Info("start case add expense")
+		err := s.httpInOut.AddExpenseRequest(trans)
+		if err != nil {
+			slog.Info("fail to add expense", "with", err.Error())
+			return nil
+		}
+		slog.Info("case add expense success")
+		return nil
+
+	}
+	if transactionFlag == string(s.config.AppConstants.IncomeFlag) {
+
+		slog.Info("start case add income")
+		err := s.httpInOut.AddIncomeRequest(trans)
+		if err != nil {
+			slog.Info("fail to add income", "with", err.Error())
+			return nil
+		}
+		slog.Info("case add income success")
+		return nil
+
+	}
+
+	slog.Info("unexpected case")
 	return nil
 }

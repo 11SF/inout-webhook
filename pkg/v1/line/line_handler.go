@@ -7,6 +7,7 @@ import (
 	coreline "github.com/11SF/inout-webhook/pkg/v1/core/line_event"
 	"github.com/gin-gonic/gin"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
+	"golang.org/x/exp/slog"
 )
 
 type LineHandler struct {
@@ -31,8 +32,9 @@ func (h *LineHandler) LineHandler(c *gin.Context) {
 
 	for _, event := range events {
 		if event.Type == linebot.EventTypeMessage {
+			slog.Info(event.WebhookEventID)
 			h.eventMessage(event)
 		}
 	}
-
+	c.JSON(http.StatusOK, nil)
 }
