@@ -13,7 +13,7 @@ import (
 
 type AddExpenseRequestFunc func(trans *datamodel.Transaction) error
 
-func (h *httpInOut) AddExpenseRequest(trans *datamodel.Transaction) error {
+func (h *HTTPInOut) AddExpenseRequest(trans *datamodel.Transaction) error {
 
 	slog.Info("start http request to add expense")
 
@@ -31,11 +31,13 @@ func (h *httpInOut) AddExpenseRequest(trans *datamodel.Transaction) error {
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	client := &http.Client{}
+	slog.Info("call api", "path", h.getUrl(h.config.Endpoints.AddExpenseEndpoint))
 	res, err := client.Do(request)
 	if err != nil {
 		slog.Info("fail to marshal transaction", "with", err.Error())
 		return response.NewError("TP500", err.Error())
 	}
+	slog.Info("call api to", "path", h.getUrl(h.config.Endpoints.AddExpenseEndpoint), "success")
 	if res.StatusCode >= 300 {
 		slog.Info("server fail to add expense", "with error code", res.StatusCode)
 		return response.NewError("TP500", fmt.Sprintf("server fail to add expense with error code %v", res.StatusCode))

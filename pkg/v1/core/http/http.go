@@ -2,7 +2,7 @@ package httpinout
 
 import "fmt"
 
-type httpInOut struct {
+type HTTPInOut struct {
 	config *HTTPConfig
 }
 
@@ -17,12 +17,12 @@ type Endpoints struct {
 	AddExpenseEndpoint string
 }
 
-func NewHTTP(config *HTTPConfig) *httpInOut {
-	return &httpInOut{
+func NewHTTP(config *HTTPConfig) *HTTPInOut {
+	return &HTTPInOut{
 		config: config,
 	}
 }
 
-func (h *httpInOut) getUrl(endpoint string) string {
+func (h *HTTPInOut) getUrl(endpoint string) string {
 	return fmt.Sprintf("%v/%v%v", h.config.Addr, h.config.ApiVersion, endpoint)
 }
