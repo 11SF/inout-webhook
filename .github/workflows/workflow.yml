@@ -1,58 +1,42 @@
-# This workfow shows how to build a Docker image, tag and push it to DigitalOcean Container Registry, and
-# deploy the application on a DIgitalOcean Kubernetes cluster. For description to the entire worklow,
-# see www.digitalocean.com/docs/kubernetes/how-to/deploy-using-github-actions.
+name: Build, push, and deploy to k8s
 
-name: Build, push, and deploy
-
-# Controls when the action will run.
 on:
-  # Triggers the workflow on push request on the main branch for changes in the specified paths.
   push:
     branches:
       - main
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # This workflow contains a single job called "build".
-  # build:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout master
-  #       uses: actions/checkout@main
-
-  #     - name: Install doctl
-  #       uses: digitalocean/action-doctl@v2
-  #       with:
-  #         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-
-  #     - name: Build container image
-  #       run: docker build -t registry.digitalocean.com/poc-nsfolk/inout-webhook:$(echo $GITHUB_SHA | head -c7) .
-
-  #     - name: Log in to DigitalOcean Container Registry with short-lived credentials
-  #       run: doctl registry login --expiry-seconds 1200
-
-  #     - name: Push image to DigitalOcean Container Registry
-  #       run: docker push registry.digitalocean.com/poc-nsfolk/inout-webhook:$(echo $GITHUB_SHA | head -c7)
-
-  deploy:
-    # needs: build
+  build:
     runs-on: ubuntu-latest
     steps:
-      # - run: apk add --no-cache git curl bash
-      # - run: apk add coreutils
+      - name: Checkout master
+        uses: actions/checkout@main
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Build container image
+        run: docker build -t registry.digitalocean.com/poc-nsfolk/inout-webhook:$(echo $GITHUB_SHA | head -c7) .
+
+      - name: Log in to DigitalOcean Container Registry with short-lived credentials
+        run: doctl registry login --expiry-seconds 1200
+
+      - name: Push image to DigitalOcean Container Registry
+        run: docker push registry.digitalocean.com/poc-nsfolk/inout-webhook:$(echo $GITHUB_SHA | head -c7)
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - run: curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
       - run: mv kustomize /usr/local/bin/
-      # - run: git remote set-url origin https://github.com/11SF/inout-webhook-kustomize.git
       - run: git config --global user.email "nawapong.sit@gmail.com"
       - run: git config --global user.name "Nawapong Sitaruno"
 
       - run: git clone https://11SF:${{ secrets.KUSTOMIZE_REPO_KEY }}@github.com/11SF/inout-webhook-kustomize.git manifest
       - run: dir=$(pwd)
-      # - run: cd manifest
-      # - run: git fetch --all
-      # - run: git branch -r
-      # - run: git checkout main
-      # - run: cd overlays/prod
       - working-directory: ./manifest/overlays/prod
         run: kustomize edit set image registry.digitalocean.com/poc-nsfolk/inout-webhook:$(echo $GITHUB_SHA | head -c7)
         
@@ -62,10 +46,6 @@ jobs:
       # - run: cd "${dir}/manifest"
       - working-directory: ./manifest
         run: git status && git add . && git commit -am 'prod image update' && git push origin master
-      # - run: git add .
-      # - run: git commit -am 'prod image update'
-      # - run: git push origin main
-      # - run: cd "${dir}"
-      # - working-directory: ${dir}/manifest
+
       - run: rm -rf manifest
 
