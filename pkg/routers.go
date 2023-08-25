@@ -1,6 +1,8 @@
 package routers
 
 import (
+	"net/http"
+
 	"github.com/11SF/inout-webhook/configs"
 	httpinout "github.com/11SF/inout-webhook/pkg/v1/core/http"
 	coreline "github.com/11SF/inout-webhook/pkg/v1/core/line_event"
@@ -24,6 +26,10 @@ func (router *Routers) InitRouters() *gin.Engine {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	r := gin.New()
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, nil)
+	})
 
 	contextPath := r.Group("/inout-webhook")
 	v1 := contextPath.Group("/v1")
