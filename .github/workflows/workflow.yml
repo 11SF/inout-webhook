@@ -52,13 +52,13 @@ jobs:
       # - run: git fetch --all
       # - run: git branch -r
       # - run: git checkout main
-      - run: cd overlays/sit
+      - run: cd overlays/prod
       - run: kustomize edit set image registry.digitalocean.com/poc-nsfolk/inout-webhook:$(echo $GITHUB_SHA | head -c7)
       - run: cat kustomization.yaml
       - run: cd "${dir}/manifest"
       - run: git status
       - run: git add .
-      - run: git commit -am 'image update'
+      - run: git commit -am 'prod image update'
       - run: git push origin main
       - run: cd "${dir}"
       - run: rm -rf manifest
