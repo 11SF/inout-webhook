@@ -69,8 +69,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - run: apk add --no-cache git curl bash
-      - run: apk add coreutils
+      # - run: apk add --no-cache git curl bash
+      # - run: apk add coreutils
       - run: curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
       - run: mv kustomize /usr/local/bin/
       - run: git remote set-url origin https://github.com/11SF/inout-webhook-kustomize.git
