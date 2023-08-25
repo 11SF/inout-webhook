@@ -48,20 +48,24 @@ jobs:
 
       - run: git clone https://11SF:${{ secrets.KUSTOMIZE_REPO_KEY }}@github.com/11SF/inout-webhook-kustomize.git manifest
       - run: dir=$(pwd)
-      - run: ls
-      - run: cd manifest
-      - run: ls
+      # - run: cd manifest
       # - run: git fetch --all
       # - run: git branch -r
       # - run: git checkout main
-      - run: cd overlays/prod
-      - run: kustomize edit set image registry.digitalocean.com/poc-nsfolk/inout-webhook:$(echo $GITHUB_SHA | head -c7)
-      - run: cat kustomization.yaml
-      - run: cd "${dir}/manifest"
-      - run: git status
-      - run: git add .
-      - run: git commit -am 'prod image update'
-      - run: git push origin main
-      - run: cd "${dir}"
+      # - run: cd overlays/prod
+      - working-directory: ./manifest/overlays/prod
+        run: kustomize edit set image registry.digitalocean.com/poc-nsfolk/inout-webhook:$(echo $GITHUB_SHA | head -c7)
+        
+
+      - working-directory: ./manifest/overlays/prod
+        run: cat kustomization.yaml
+      # - run: cd "${dir}/manifest"
+      - working-directory: ./manifest
+        run: git status && git add . && git commit -am 'prod image update' && git push origin main
+      # - run: git add .
+      # - run: git commit -am 'prod image update'
+      # - run: git push origin main
+      # - run: cd "${dir}"
+      # - working-directory: ${dir}/manifest
       - run: rm -rf manifest
 
