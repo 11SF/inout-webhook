@@ -61,7 +61,7 @@ jobs:
         run: cat kustomization.yaml
       # - run: cd "${dir}/manifest"
       - working-directory: ./manifest
-        run: git status && git add . && git commit -am 'prod image update' && git push origin main
+        run: git status && git add . && git commit -am 'prod image update' && git push origin master
       # - run: git add .
       # - run: git commit -am 'prod image update'
       # - run: git push origin main
