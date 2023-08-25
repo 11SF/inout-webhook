@@ -48,7 +48,9 @@ jobs:
 
       - run: git clone https://11SF:${{ secrets.KUSTOMIZE_REPO_KEY }}@github.com/11SF/inout-webhook-kustomize.git manifest
       - run: dir=$(pwd)
+      - run: ls
       - run: cd manifest
+      - run: ls
       # - run: git fetch --all
       # - run: git branch -r
       # - run: git checkout main
