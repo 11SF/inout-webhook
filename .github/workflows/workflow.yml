@@ -73,7 +73,7 @@ jobs:
       # - run: apk add coreutils
       - run: curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
       - run: mv kustomize /usr/local/bin/
-      - run: git remote set-url origin https://github.com/11SF/inout-webhook-kustomize.git
+      # - run: git remote set-url origin https://github.com/11SF/inout-webhook-kustomize.git
       - run: git config --global user.email "nawapong.sit@gmail.com"
       - run: git config --global user.name "Nawapong Sitaruno"
 
