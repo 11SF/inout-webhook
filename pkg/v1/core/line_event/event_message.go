@@ -1,6 +1,7 @@
 package coreline
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,31 +26,37 @@ func (s *service) EventMessage(event *linebot.Event) error {
 	plaintText = strings.TrimSpace(plaintText)
 
 	var transactionFlag string
-	trans := &datamodel.Transaction{}
-	trans.UserUUID = event.Source.UserID
+	var trans *datamodel.Transaction
 
 	transactionWithMessage, _ := regexp.MatchString(`([+-])(\d+(\.\d{2})?)฿(.+)`, plaintText)
 	if transactionWithMessage {
+		fmt.Println("transactionWithMessage")
 		transactionFlag = string(plaintText[0])
 		data := strings.Split(plaintText, "฿")
-		amountStr := strings.TrimSpace(data[0][1:])
+		amountStr := data[0][1:]
 		amount, _ := strconv.ParseFloat(amountStr, 64)
 
-		trans.Amount = amount
-		trans.Message = strings.TrimSpace(data[1])
+		trans = &datamodel.Transaction{
+			Amount:   amount,
+			Message:  strings.TrimSpace(data[1]),
+			UserUUID: event.Source.UserID,
+		}
 	}
-	transactionWithOutMessage, _ := regexp.MatchString(`([+-])(\d+(\.\d{2})?)฿`, plaintText)
+	transactionWithOutMessage, _ := regexp.MatchString(`([+-])(\d+(\.\d{2})?)฿$`, plaintText)
 	if transactionWithOutMessage {
+		fmt.Println("transactionWithOutMessage")
 		transactionFlag = string(plaintText[0])
 		amountStr := strings.TrimRight(plaintText[1:], "฿")
 		amountStr = strings.TrimSpace(amountStr)
 		amount, _ := strconv.ParseFloat(amountStr, 64)
 
-		trans.Amount = amount
+		trans = &datamodel.Transaction{
+			Amount:   amount,
+			UserUUID: event.Source.UserID,
+		}
 	}
 
 	if transactionFlag == string(s.config.AppConstants.ExpenseFlag) {
-
 		slog.Info("start case add expense")
 		err := s.httpInOut.AddExpenseRequest(trans)
 		if err != nil {
@@ -61,7 +68,6 @@ func (s *service) EventMessage(event *linebot.Event) error {
 
 	}
 	if transactionFlag == string(s.config.AppConstants.IncomeFlag) {
-
 		slog.Info("start case add income")
 		err := s.httpInOut.AddIncomeRequest(trans)
 		if err != nil {
