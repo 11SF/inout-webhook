@@ -32,12 +32,9 @@ func (s *service) EventMessage(event *linebot.Event) error {
 	if transactionWithMessage {
 		transactionFlag = string(plaintText[0])
 		data := strings.Split(plaintText, "฿")
-		amountStr := data[0][1:]
-		amount, err := strconv.ParseFloat(amountStr, 64)
-		if err != nil {
-			slog.Info("fail to parse float")
-			return nil
-		}
+		amountStr := strings.TrimSpace(data[0][1:])
+		amount, _ := strconv.ParseFloat(amountStr, 64)
+
 		trans.Amount = amount
 		trans.Message = strings.TrimSpace(data[1])
 	}
@@ -45,11 +42,9 @@ func (s *service) EventMessage(event *linebot.Event) error {
 	if transactionWithOutMessage {
 		transactionFlag = string(plaintText[0])
 		amountStr := strings.TrimRight(plaintText[1:], "฿")
-		amount, err := strconv.ParseFloat(amountStr, 64)
-		if err != nil {
-			slog.Info("fail to parse float")
-			return nil
-		}
+		amountStr = strings.TrimSpace(amountStr)
+		amount, _ := strconv.ParseFloat(amountStr, 64)
+
 		trans.Amount = amount
 	}
 
